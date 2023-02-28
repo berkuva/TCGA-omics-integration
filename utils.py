@@ -4,6 +4,8 @@ from torch import Tensor
 import scipy.stats
 import glob
 import pandas as pd
+from captum.attr import DeepLift
+
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -201,3 +203,23 @@ def torch_compute_confidence_interval(data: Tensor, confidence: float = 0.95):
     t_p: float = float(scipy.stats.t.ppf((1 + confidence) / 2., n - 1))
     ci = t_p * se
     return mean, ci
+  
+  
+  
+def get_attributes_DeepLift(model_, tensor_data, reference, deeplift_target):
+    dl = DeepLift(model_)
+    attribution = dl.attribute(tensor_data,
+                               target=deeplift_target,
+                               baselines=reference)
+    attribution_sum = torch.sum(attribution, 0)
+
+    return attribution_sum
+
+def run_deeplift(model, tensor_data, reference, deeplift_target):
+    attribution = get_attributes_DeepLift(model, tensor_data, reference, deeplift_target)
+    return attribution
+  
+  
+  
+  
+  
